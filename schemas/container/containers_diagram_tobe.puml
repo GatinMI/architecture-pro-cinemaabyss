@@ -1,0 +1,58 @@
+@startuml
+title Container Diagram "Кинобездна" (To-Be)
+
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/refs/heads/master/C4_Container.puml
+
+Person(user, "Пользователь")
+
+System_Boundary(system, "Кинобездна") {
+    Container(app, "SPA/MobileApp/SmartTv", "", "Предоставляет функциональность системы для пользователя")
+    Container(api, "API Gateway", "Java/Spring/Webflux", "Единая точка входа")
+
+    Container(auth, "Auth Service", "Go", "Управление пользователями")
+    Container(subscriptions, "Subscriptions Service", "Go", "Управление подписками")
+    Container(events, "Events Service", "Java/Spring/Webflux")
+    Container(movies, "Movies Service", "Go", "Управление фильмами")
+    Container(payments, "Payments Service", "Go", "Обработка платежей")
+    Container(streams, "Streaming Service", "Go", "Стримминг фильмов")
+
+
+    ContainerDb(db_users, "Users DB", "PostgreSQL")
+    ContainerDb(db_subscriptions, "Subscriptions DB", "PostgreSQL")
+    ContainerDb(db_movies, "Movies DB", "PostgreSQL")
+    ContainerDb(db_payments, "Payments DB", "PostgreSQL")
+    ContainerDb(db_cinemas, "Cinemas DB", "PostgreSQL")
+    ContainerDb(s3, "Video Storage", "S3")
+
+    ContainerQueue(queue, "Message Broker", "proto/Kafka", "Асинхронные события")
+}
+
+System_Ext(payment_ext, "Внешняя платежная система")
+System_Ext(rec_sys, "Внешняя рекомендательная система")
+System_Ext(cinema, "Онлайн кинотеатры")
+
+Rel(user, app, "Заходит в приложение")
+Rel(app, api, "Делает api запросы", "JSON/HTTPS")
+
+Rel(api, auth, "Auth запросы", "JSON/HTTPS")
+Rel(api, subscriptions, "Подписки", "JSON/HTTPS")
+Rel(api, movies, "Фильмы", "JSON/HTTPS")
+Rel(api, payments, "Платежи", "JSON/HTTPS")
+Rel(api, streams, "Видеостримминг", "QUIC/HTTP3")
+
+Rel(subscriptions, db_subscriptions, "Read from/writes to", "SQL/TCP")
+Rel(auth, db_users, "Read from/writes to", "SQL/TCP")
+Rel(movies, db_movies, "Read from/writes to", "SQL/TCP")
+Rel(payments, db_payments, "Read from/writes to", "SQL/TCP")
+Rel(streams, db_cinemas, "Read from/writes to", "SQL/TCP")
+Rel(streams, s3, "Read from/writes to", "JSON/HTTPS")
+
+Rel(payments, payment_ext, "биллинг")
+Rel(movies, rec_sys, "Получение рекомендаций")
+Rel(movies, events, "Отправка событий по фильмам")
+Rel(auth, events, "Отправка событий по пользователям")
+Rel(payments, events, "Отправка событий по payments")
+Rel(events, queue, "Сохранение событий")
+Rel(queue, events, "Обработка событий")
+Rel(streams, cinema, "Стримминг видео")
+@enduml

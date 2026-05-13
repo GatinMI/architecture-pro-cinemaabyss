@@ -1,0 +1,7 @@
+server:
+  port: ${PORT}
+
+
+logging:
+  level:
+    com.cinemaabyss.events: INFO
